@@ -1,0 +1,108 @@
+// File: backend/cmd/api/main.go
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/joho/godotenv"
+)
+
+// config struct holds all configuration for the application.
+type config struct {
+	port string
+	env  string
+	db   struct {
+		dsn string
+	}
+	redis struct {
+		addr string
+	}
+}
+
+// application struct holds the application-wide dependencies.
+type application struct {
+	config config
+	logger *slog.Logger
+	// We will add models, services, repositories here later.
+}
+
+func main() {
+	// Initialize a new structured logger
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	// Load environment variables
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		logger.Error("error loading .env file", "error", err)
+		os.Exit(1)
+	}
+
+	// Initialize config struct
+	var cfg config
+	cfg.port = os.Getenv("PORT")
+	if cfg.port == "" {
+		cfg.port = "8080"
+	}
+	cfg.env = os.Getenv("ENV")
+	if cfg.env == "" {
+		cfg.env = "development"
+	}
+	cfg.db.dsn = os.Getenv("DB_DSN")
+	cfg.redis.addr = os.Getenv("REDIS_ADDR")
+
+	// Initialize application struct
+	app := &application{
+		config: cfg,
+		logger: logger,
+	}
+
+	// Create a new server
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%s", cfg.port),
+		Handler:      app.routes(), // Our new routes function
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	}
+
+	// Graceful shutdown logic
+	shutdownError := make(chan error)
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit
+
+		logger.Info("shutting down server", "signal", s.String())
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		shutdownError <- srv.Shutdown(ctx)
+	}()
+
+	logger.Info("starting server", "addr", srv.Addr, "env", cfg.env)
+
+	// Start the server
+	err = srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		logger.Error("server startup failed", "error", err)
+		os.Exit(1)
+	}
+
+	// Wait for shutdown to complete
+	if err = <-shutdownError; err != nil {
+		logger.Error("server shutdown failed", "error", err)
+	} else {
+		logger.Info("server stopped gracefully")
+	}
+}
