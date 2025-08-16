@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cliffdoyle/internal/database"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
@@ -31,6 +33,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
+	db     *pgxpool.Pool
 	// We will add models, services, repositories here later.
 }
 
@@ -55,13 +58,24 @@ func main() {
 	if cfg.env == "" {
 		cfg.env = "development"
 	}
-	cfg.db.dsn = os.Getenv("DB_DSN")
+	cfg.db.dsn = os.Getenv("SUPABASE_URL")
 	cfg.redis.addr = os.Getenv("REDIS_ADDR")
+
+	//Establish database connection
+	db, err := database.Connect(cfg.db.dsn)
+	if err != nil {
+		logger.Error("error connecting to database", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	logger.Info("database connection established")
 
 	// Initialize application struct
 	app := &application{
 		config: cfg,
 		logger: logger,
+		db:     db,
 	}
 
 	// Create a new server
