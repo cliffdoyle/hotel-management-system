@@ -11,6 +11,7 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	data := envelope{
 		"status":      "available",
 		"environment": app.config.env,
+		"version":     "1.0.0",
 	}
 
 	//use the writeJSON helper instead now
