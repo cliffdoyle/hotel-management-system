@@ -3,24 +3,28 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
-	// A simple healthcheck response
-	data := map[string]string{
+	// refactor to use the new envelope type
+	data := envelope{
 		"status":      "available",
 		"environment": app.config.env,
+		"version":     "1.0.0",
 	}
 
-	js, err := json.Marshal(data)
+	//use the writeJSON helper instead now
+
+	err := app.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
-		app.logger.Error("failed to marshal healthcheck data", "error", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+		// app.logger.Error("failed to marshal healthcheck data", "error", err)
+		// http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		// return
+		//Use the serverErrorResponse helper instead
+		app.serverErrorResponse(w, r, err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
+	// w.Header().Set("Content-Type", "application/json")
+	// w.Write(js)
 }
