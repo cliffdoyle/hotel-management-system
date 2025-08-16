@@ -3,7 +3,11 @@
 package main
 
 import (
+	"errors"
 	"net/http"
+	"time"
+
+	"github.com/cliffdoyle/internal/tokens"
 )
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,4 +31,64 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 
 	// w.Header().Set("Content-Type", "application/json")
 	// w.Write(js)
+}
+
+// refreshTokenHandler validates a refresh token and issues a new pair of tokens.
+func (app *application) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// For now, validation on the DTO is simple.
+	// In the next issue, we'll add a proper validator.
+
+	// Look up the session for the refresh token.
+	session, err := tokens.GetSession(app.redis, input.RefreshToken, tokens.ScopeRefreshToken)
+	if err != nil {
+		switch {
+		case errors.Is(err, tokens.ErrSessionNotFound):
+			app.invalidAuthenticationTokenResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	// The refresh token is valid. Immediately delete the old one.
+	err = tokens.DeleteSession(app.redis, input.RefreshToken, tokens.ScopeRefreshToken)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Issue a new pair of tokens.
+	// NOTE: For now, roles are an empty slice. We will fetch real roles during login in Issue 5.
+	newAuthToken, err := tokens.GenerateToken(app.redis, session.UserID, 30*time.Minute, tokens.ScopeAuthentication, []string{})
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	newRefreshToken, err := tokens.GenerateToken(app.redis, session.UserID, 24*time.Hour*30, tokens.ScopeRefreshToken, []string{})
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	// Send the new tokens to the client.
+	response := envelope{
+		"authentication_token": newAuthToken,
+		"refresh_token":        newRefreshToken.Plaintext,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, response, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

@@ -21,8 +21,24 @@ func (app *application) routes() http.Handler {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
+	// Create a dummy user handler for testing the middleware.
+	router.HandlerFunc(http.MethodGet, "/v1/users/:id", app.requireAuthenticatedUser(app.getUserHandler)) // Dummy handler
+
+	// A sample route with permission check.
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.requirePermission("users:write", app.createUserHandler)) // Dummy handler
+
 	// Our first endpoint: a health check.
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/refresh", app.refreshTokenHandler)
 
-	return router
+	return app.authenticate(router)
+}
+
+// Dummy handler functions to test our middleware
+func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+}
+func (app *application) createUserHandler(w http.ResponseWriter, r *http.Request) {
+	app.writeJSON(w, http.StatusCreated, envelope{"message": "user created successfully (not really)"}, nil)
 }

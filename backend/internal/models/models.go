@@ -18,6 +18,7 @@ type User struct {
 	FirstName    *string   `json:"first_name,omitempty"`
 	LastName     *string   `json:"last_name,omitempty"`
 	IsActive     bool      `json:"is_active"`
+	Roles        []string  `json:"roles,omitempty"` // For RBAC
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	Version      int       `json:"-"` // Used for optimistic locking
@@ -45,4 +46,12 @@ type Role struct {
 type Permission struct {
 	ID   int64  `json:"id"`
 	Code string `json:"code"`
+}
+
+// AnonymousUser represents a user who is not authenticated.
+var AnonymousUser = &User{}
+
+// IsAnonymous checks if a User instance is the anonymous user.
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }

@@ -13,7 +13,9 @@ import (
 	"time"
 
 	"github.com/cliffdoyle/internal/database"
-	"github.com/jackc/pgx/v5/pgxpool"
+	redisclient "github.com/cliffdoyle/internal/redis"
+	"github.com/cliffdoyle/internal/repository"
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 )
 
@@ -25,7 +27,9 @@ type config struct {
 		dsn string
 	}
 	redis struct {
-		addr string
+		addr     string
+		password string
+		db       int
 	}
 }
 
@@ -33,7 +37,8 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
-	db     *pgxpool.Pool
+	models repository.Models
+	redis  *redis.Client
 	// We will add models, services, repositories here later.
 }
 
@@ -71,11 +76,20 @@ func main() {
 
 	logger.Info("database connection established")
 
+	// Establish Redis connection using the aliased package name
+	redisClient, err := redisclient.Connect(cfg.redis.addr, cfg.redis.password, cfg.redis.db)
+	if err != nil {
+		logger.Error("failed to connect to redis", "error", err)
+		os.Exit(1)
+	}
+	logger.Info("redis connection pool established")
+
 	// Initialize application struct
 	app := &application{
 		config: cfg,
 		logger: logger,
-		db:     db,
+		models:     repository.NewModels(db),
+		redis:  redisClient,
 	}
 
 	// Create a new server
