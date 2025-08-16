@@ -79,22 +79,16 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
 
-		// A placeholder function to check permissions.
-		// In a real implementation, we would query the database to get all permissions for the user's roles.
-		hasPermission := false
-		for _, role := range user.Roles {
-			// This is a simplified check. A full implementation would check against the roles_permissions table.
-			if role == "Hotel Manager" && (code == "users:read" || code == "users:write") {
-				hasPermission = true
-				break
-			}
-			if role == "Front Desk" && (code == "users:read") {
-				hasPermission = true
-				break
-			}
+		//Get the user's permissions from the database.
+		permissions, err := app.models.Permissions.GetAllForUser(user.ID)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
 		}
 
-		if !hasPermission {
+		//Check if the user has the required permission.
+		_,ok:=permissions[code]
+		if !ok {
 			app.notPermittedResponse(w, r)
 			return
 		}

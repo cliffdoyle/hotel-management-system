@@ -14,8 +14,8 @@ import (
 
 	"github.com/cliffdoyle/internal/database"
 	redisclient "github.com/cliffdoyle/internal/redis"
+	"github.com/cliffdoyle/internal/repository"
 	"github.com/go-redis/redis/v8"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
@@ -37,7 +37,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
-	db     *pgxpool.Pool
+	models repository.Models
 	redis  *redis.Client
 	// We will add models, services, repositories here later.
 }
@@ -88,7 +88,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
-		db:     db,
+		models:     repository.NewModels(db),
 		redis:  redisClient,
 	}
 
