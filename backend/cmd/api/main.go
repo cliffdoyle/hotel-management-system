@@ -19,6 +19,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // config struct holds all configuration for the application.
@@ -46,12 +47,13 @@ type Services struct {
 
 // application struct holds the application-wide dependencies.
 type application struct {
-	config   config
-	logger   *slog.Logger
-	models   Models
-	services Services
-	redis    *redis.Client
-	db       *pgxpool.Pool
+	config      config
+	logger      *slog.Logger
+	models      Models
+	services    Services
+	redis       *redis.Client
+	db          *pgxpool.Pool
+	metrics_reg *prometheus.Registry // <-- ADD A CUSTOM REGISTRY
 	// We will add models, services, repositories here later.
 }
 
@@ -97,6 +99,9 @@ func main() {
 	}
 	logger.Info("redis connection pool established")
 
+	// --- Initialize Prometheus Registry ---
+	metrics_reg := prometheus.NewRegistry()
+
 	// --- Initialize repositories ---
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
@@ -117,6 +122,7 @@ func main() {
 		},
 		redis: redisClient,
 		db:    db,
+		metrics_reg: metrics_reg,
 	}
 
 	// Create a new server

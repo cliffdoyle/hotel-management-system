@@ -22,6 +22,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users/login", app.loginHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/refresh", app.refreshTokenHandler)
+	router.Handler(http.MethodGet, "/metrics", app.metricsHandler())
 
 	// Chain our middleware together in the correct order.
 	// Outermost middleware is applied first.

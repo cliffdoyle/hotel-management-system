@@ -36,14 +36,22 @@ var (
 	})
 )
 
-// metricsHandler creates a handler to expose the Prometheus metrics.
-func (app *application) metricsHandler() http.Handler {
+// initMetrics registers all our custom metrics with the application's registry.
+func (app *application) initMetrics() {
+	// Register application-specific metrics.
+	app.metrics_reg.MustRegister(httpRequestsTotal)
+	app.metrics_reg.MustRegister(httpRequestDuration)
+	app.metrics_reg.MustRegister(appInfo)
+
 	// Register the standard Go process and build info collectors.
-	prometheus.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-	prometheus.MustRegister(prometheus.NewGoCollector())
+	app.metrics_reg.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	app.metrics_reg.MustRegister(prometheus.NewGoCollector())
 
-	// Set the app_info gauge to 1 to indicate the app is running.
+	// Set the initial value for the app_info gauge.
 	appInfo.Set(1)
+}
 
-	return promhttp.Handler()
+// metricsHandler creates a handler that serves metrics from our CUSTOM registry.
+func (app *application) metricsHandler() http.Handler {
+	return promhttp.HandlerFor(app.metrics_reg, promhttp.HandlerOpts{})
 }

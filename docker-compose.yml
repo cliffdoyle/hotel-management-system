@@ -1,6 +1,7 @@
-# hotel-pms/docker-compose.yml
 version: '3.8'
+
 services:
+  # The Redis service is defined here
   redis:
     image: redis:7-alpine
     restart: always
@@ -9,23 +10,26 @@ services:
     volumes:
       - redis_data:/data
 
-volumes:
-  redis_data:
-
-# Monitoring
-
+  # The Prometheus service should be at the SAME indentation level as redis
   prometheus:
     image: prom/prometheus:v2.45.0
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090" # Expose Prometheus UI on port 9090
+      - "9090:9090"
+    depends_on:
+      - redis # Optional: good practice to ensure Redis starts first if you ever monitor it
 
+  # The Grafana service is also at the SAME indentation level
   grafana:
     image: grafana/grafana-oss:9.5.3
     container_name: grafana
     ports:
-      - "3000:3000" # Expose Grafana UI on port 3000
+      - "3000:3000"
     depends_on:
-      - prometheus
+      - prometheus # Grafana needs Prometheus to be running to connect to it
+
+# The top-level 'volumes' block is completely separate from the 'services' block
+volumes:
+  redis_data:
