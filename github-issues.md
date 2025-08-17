@@ -99,7 +99,7 @@ Create main Application struct for dependency injection and setup helper methods
 **Milestone:** Phase 1 - Core Foundation & Authentication
 
 #### 📝 Description
-Implement JWT-based authentication with Redis session management and role-based access control.
+Implement token-based authentication with Redis session management and role-based access control.
 
 #### 🎯 Acceptance Criteria
 - [ ] Create JWT token generation and validation
