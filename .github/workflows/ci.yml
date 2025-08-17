@@ -1,0 +1,53 @@
+# .github/workflows/ci.yml
+
+name: Go Backend CI
+
+# This section defines WHEN the workflow will run.
+on:
+  # Run on pushes to the 'main' and 'development' branches.
+  push:
+    branches:
+      - main
+      - development
+
+  # Run on any pull request that targets the 'main' or 'development' branches.
+  pull_request:
+    branches:
+      - main
+      - development
+
+# This section defines the jobs that will be executed.
+jobs:
+  # We'll define a single job named 'test'.
+  test:
+    name: Build and Test
+    # Use the latest version of Ubuntu as the runner environment.
+    runs-on: ubuntu-latest
+
+    # These are the sequential steps the job will take.
+    steps:
+      # Step 1: Check out the repository's code
+      # This downloads your code into the runner.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the Go environment
+      # This installs the specified version of Go.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      # Step 3: Tidy modules to ensure dependencies are consistent
+      # This is a good practice to ensure the go.mod and go.sum files are correct.
+      - name: Tidy Go modules
+        run: go mod tidy
+        working-directory: ./backend
+
+      # Step 4: Run the Go test command
+      # `go test ./...` recursively tests all packages in the current directory and subdirectories.
+      # For now, it will mainly just compile the code. When we add files ending in `_test.go`,
+      # this command will execute them.
+      - name: Run Go tests
+        run: go test -v ./...
+        working-directory: ./backend
