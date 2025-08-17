@@ -7,6 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// The `routes` function now returns a fully wrapped http.Handler.
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
@@ -15,16 +16,23 @@ func (app *application) routes() http.Handler {
 	router.PanicHandler = func(w http.ResponseWriter, r *http.Request, i interface{}) {
 		app.serverErrorResponse(w, r, fmt.Errorf("panic recovered: %v", i))
 	}
-
-	// --- Public User Routes ---
+	
+	// --- Public Routes ---
 	router.HandlerFunc(http.MethodPost, "/v1/users/register", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users/login", app.loginHandler)
-
-	// --- Other Public Routes ---
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/refresh", app.refreshTokenHandler)
 
-	// Add protected profile management routes in the future here
+	// Chain our middleware together in the correct order.
+	// Outermost middleware is applied first.
+	var chain http.Handler
+	chain = router
+	chain = app.withRateLimit(chain)
+	chain = app.authenticate(chain) // Authenticate is after rate limiting
+	chain = app.withCORS(chain)
+	chain = app.withSecurityHeaders(chain)
+	chain = app.withLogging(chain)
+	chain = app.withRequestID(chain)
 	
-	return app.authenticate(router)
+	return chain
 }
