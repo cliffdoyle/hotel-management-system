@@ -27,6 +27,7 @@ func (app *application) routes() http.Handler {
 	// Outermost middleware is applied first.
 	var chain http.Handler
 	chain = router
+	chain = app.withMetrics(chain)
 	chain = app.withRateLimit(chain)
 	chain = app.authenticate(chain) // Authenticate is after rate limiting
 	chain = app.withCORS(chain)
