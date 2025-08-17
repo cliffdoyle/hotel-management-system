@@ -48,11 +48,12 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := app.services.Users.Login(r.Context(), input)
 	if err != nil {
+		var validationErr *validator.ValidationError
 		switch {
 		case errors.Is(err, repository.ErrInvalidCredentials):
 			app.errorResponse(w, r, http.StatusUnauthorized, "invalid email or password")
-		case errors.As(err, &validator.ValidationError{}):
-			app.failedValidationResponse(w, r, err.(*validator.ValidationError).Errors)
+		case errors.As(err, &validationErr):
+			app.failedValidationResponse(w, r, validationErr.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
