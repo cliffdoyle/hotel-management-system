@@ -15,6 +15,7 @@ import (
 	"github.com/cliffdoyle/internal/database"
 	redisclient "github.com/cliffdoyle/internal/redis"
 	"github.com/cliffdoyle/internal/repository"
+	"github.com/cliffdoyle/internal/service"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 )
@@ -33,12 +34,22 @@ type config struct {
 	}
 }
 
+// The `Services` and `Models` types are now collections of our other repository/service interfaces.
+type Models struct {
+	Permissions repository.PermissionRepository
+	Users       repository.UserRepository
+}
+type Services struct {
+	Users service.UserService
+}
+
 // application struct holds the application-wide dependencies.
 type application struct {
-	config config
-	logger *slog.Logger
-	models repository.Models
-	redis  *redis.Client
+	config   config
+	logger   *slog.Logger
+	models   Models
+	services Services
+	redis    *redis.Client
 	// We will add models, services, repositories here later.
 }
 
@@ -84,12 +95,25 @@ func main() {
 	}
 	logger.Info("redis connection pool established")
 
+	// --- Initialize repositories ---
+	userRepo := repository.NewUserRepository(db)
+	permissionRepo := repository.NewPermissionRepository(db)
+
+	// --- Initialize services ---
+	userService := service.NewUserService(userRepo, redisClient)
+
 	// Initialize application struct
 	app := &application{
 		config: cfg,
 		logger: logger,
-		models:     repository.NewModels(db),
-		redis:  redisClient,
+		services: Services{
+			Users: userService,
+		},
+		models: Models{
+			Users:       userRepo,
+			Permissions: permissionRepo,
+		},
+		redis: redisClient,
 	}
 
 	// Create a new server
