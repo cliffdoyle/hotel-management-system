@@ -17,6 +17,7 @@ import (
 	"github.com/cliffdoyle/internal/repository"
 	"github.com/cliffdoyle/internal/service"
 	"github.com/go-redis/redis/v8"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
@@ -50,6 +51,7 @@ type application struct {
 	models   Models
 	services Services
 	redis    *redis.Client
+	db       *pgxpool.Pool
 	// We will add models, services, repositories here later.
 }
 
@@ -114,6 +116,7 @@ func main() {
 			Permissions: permissionRepo,
 		},
 		redis: redisClient,
+		db:    db,
 	}
 
 	// Create a new server
