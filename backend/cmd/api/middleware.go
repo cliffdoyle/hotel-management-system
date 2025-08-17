@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cliffdoyle/internal/models"
 	"github.com/cliffdoyle/internal/tokens"
@@ -79,15 +80,18 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
 
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
 		//Get the user's permissions from the database.
-		permissions, err := app.models.Permissions.GetAllForUser(user.ID)
+		permissions, err := app.models.Permissions.GetAllForUser(ctx, user.ID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
 
 		//Check if the user has the required permission.
-		_,ok:=permissions[code]
+		_, ok := permissions[code]
 		if !ok {
 			app.notPermittedResponse(w, r)
 			return
