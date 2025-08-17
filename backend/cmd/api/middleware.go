@@ -11,12 +11,76 @@ import (
 
 	"github.com/cliffdoyle/internal/models"
 	"github.com/cliffdoyle/internal/tokens"
+	"github.com/google/uuid"
 )
 
 // A custom contextKey type to avoid key collisions in context.
 type contextKey string
 
 const userContextKey = contextKey("user")
+
+// responseWriter is a custom response writer that captures the status code.
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(statusCode int) {
+	rw.statusCode = statusCode
+	rw.ResponseWriter.WriteHeader(statusCode)
+}
+
+// withRequestID generates a unique ID for each request.
+func (app *application) withRequestID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := uuid.New().String()
+		ctx := context.WithValue(r.Context(), "requestID", requestID)
+		w.Header().Set("X-Request-ID", requestID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// withLogging logs details about each request and its response.
+func (app *application) withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Use our custom response writer to capture status code
+		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Let the request proceed down the chain
+		next.ServeHTTP(rw, r)
+
+		duration := time.Since(start)
+		requestID, _ := r.Context().Value("requestID").(string)
+
+		app.logger.Info("request processed",
+			"id", requestID,
+			"method", r.Method,
+			"path", r.URL.Path,
+			"remote_addr", r.RemoteAddr,
+			"user_agent", r.UserAgent(),
+			"status", rw.statusCode,
+			"duration", duration.String(),
+		)
+	})
+}
+
+// withSecurityHeaders adds common security headers to every response.
+func (app *application) withSecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';")
+		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "deny")
+		w.Header().Set("X-XSS-Protection", "0")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ... (existing authenticate, requireAuthenticatedUser, etc.)
 
 // authenticate middleware retrieves the token, looks up the session, and injects user info into the context.
 func (app *application) authenticate(next http.Handler) http.Handler {
