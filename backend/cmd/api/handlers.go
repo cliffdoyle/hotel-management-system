@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -11,26 +12,41 @@ import (
 )
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
-	// refactor to use the new envelope type
 	data := envelope{
-		"status":      "available",
-		"environment": app.config.env,
-		"version":     "1.0.0",
+		"status": "available",
+		"system_info": map[string]string{
+			"environment": app.config.env,
+			"version":     "1.0.0",
+		},
+		"dependencies": map[string]string{
+			"database": "OK",
+			"redis":    "OK",
+		},
 	}
 
-	//use the writeJSON helper instead now
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
-	err := app.writeJSON(w, http.StatusOK, data, nil)
+	// Use app.db directly to ping the database.
+	if err := app.db.Ping(ctx); err != nil {
+		data["dependencies"].(map[string]string)["database"] = "Error: " + err.Error()
+		data["status"] = "degraded"
+	}
+
+	if err := app.redis.Ping(ctx).Err(); err != nil {
+		data["dependencies"].(map[string]string)["redis"] = "Error: " + err.Error()
+		data["status"] = "degraded"
+	}
+
+	statusCode := http.StatusOK
+	if data["status"] != "available" {
+		statusCode = http.StatusServiceUnavailable
+	}
+
+	err := app.writeJSON(w, statusCode, data, nil)
 	if err != nil {
-		// app.logger.Error("failed to marshal healthcheck data", "error", err)
-		// http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		// return
-		//Use the serverErrorResponse helper instead
 		app.serverErrorResponse(w, r, err)
 	}
-
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write(js)
 }
 
 // refreshTokenHandler validates a refresh token and issues a new pair of tokens.
