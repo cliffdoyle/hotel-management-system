@@ -6,7 +6,7 @@ import (
 
 	"github.com/cliffdoyle/internal/repository"
 	"github.com/cliffdoyle/internal/service"
-	"github.com/cliffdoyle/internal/validation"
+	validator "github.com/cliffdoyle/internal/validation"
 	"github.com/google/uuid"
 )
 
@@ -18,15 +18,16 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	// IMPORTANT: Replace with a real hotel UUID from your database.
-	hotelID, _ := uuid.Parse("YOUR-HARDCODED-HOTEL-UUID-HERE")
+	hotelID, _ := uuid.Parse("694b475a-31ca-4ec5-a092-223e71ff69e2")
 
 	user, err := app.services.Users.Register(r.Context(), input, hotelID)
 	if err != nil {
+		var validationErr *validator.ValidationError 
 		switch {
 		case errors.Is(err, repository.ErrDuplicateEmail):
 			app.failedValidationResponse(w, r, map[string]string{"email": "a user with this email address already exists"})
-		case errors.As(err, &validator.ValidationError{}):
-			app.failedValidationResponse(w, r, err.(*validator.ValidationError).Errors)
+		case errors.As(err, &validationErr):
+			app.failedValidationResponse(w, r, validationErr.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
