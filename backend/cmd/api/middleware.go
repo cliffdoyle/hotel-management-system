@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,25 +30,25 @@ func (rw *responseWriter) WriteHeader(statusCode int) {
 	rw.ResponseWriter.WriteHeader(statusCode)
 }
 
-// withMetrics records Prometheus metrics for each request.
-func (app *application) withMetrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Use our custom response writer again.
-		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+// // withMetrics records Prometheus metrics for each request.
+// func (app *application) withMetrics(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		// Use our custom response writer again.
+// 		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-		// Start the timer.
-		start := time.Now()
+// 		// Start the timer.
+// 		start := time.Now()
 
-		// Let the request proceed.
-		next.ServeHTTP(rw, r)
+// 		// Let the request proceed.
+// 		next.ServeHTTP(rw, r)
 
-		duration := time.Since(start).Seconds()
+// 		duration := time.Since(start).Seconds()
 
-		// Record the metrics.
-		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(rw.statusCode)).Inc()
-		httpRequestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(duration)
-	})
-}
+// 		// Record the metrics.
+// 		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(rw.statusCode)).Inc()
+// 		httpRequestDuration.WithLabelValues(r.Method, r.URL.Path).Observe(duration)
+// 	})
+// }
 
 // withRequestID generates a unique ID for each request.
 func (app *application) withRequestID(next http.Handler) http.Handler {
@@ -100,8 +99,6 @@ func (app *application) withSecurityHeaders(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-// ... (existing authenticate, requireAuthenticatedUser, etc.)
 
 // authenticate middleware retrieves the token, looks up the session, and injects user info into the context.
 func (app *application) authenticate(next http.Handler) http.Handler {

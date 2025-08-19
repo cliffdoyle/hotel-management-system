@@ -20,6 +20,8 @@ services:
       - "9090:9090"
     depends_on:
       - redis # Optional: good practice to ensure Redis starts first if you ever monitor it
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # The Grafana service is also at the SAME indentation level
   grafana:
@@ -29,6 +31,8 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus # Grafana needs Prometheus to be running to connect to it
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 # The top-level 'volumes' block is completely separate from the 'services' block
 volumes:

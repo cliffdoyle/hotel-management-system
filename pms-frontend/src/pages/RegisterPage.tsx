@@ -1,101 +1,149 @@
-import { useForm } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Input } from "../components/ui/Input";
+// src/pages/RegisterPage.tsx
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
+import { useAuth } from "../hooks/useAuth";
+import { registerUser } from "../api/authService";
 
-// 1. Define the validation schema with Zod, including password confirmation
-const registerSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters long" }),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
-})
-.refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"], // Set the error on the confirmPassword field
-});
+interface RegisterFormData {
+    first_name: string;
+    last_name: string;
+    email: string;
+    password: string;
+}
 
-// 2. Infer the TypeScript type from the Zod schema
-type RegisterFormData = z.infer<typeof registerSchema>;
 
-export function RegisterPage() {
-  // 3. Set up React Hook Form
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-  });
+export default function RegisterPage() {
+    const [apiError, setApiError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const auth = useAuth();
+    const navigate = useNavigate();
 
-  // 4. Define the submit handler
-  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
-    // This is where you'll call your backend API for registration
-    console.log("Registering user with data:", data);
-    // Simulate network delay for loading state
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log("Pretend registration successful!");
-  };
+    // Simple form state
+    const [formData, setFormData] = useState<RegisterFormData>({
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: ''
+    });
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Create a new account</h2>
-        
-        {/* 5. Use the handleSubmit wrapper */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Input
-            id="name"
-            type="text"
-            label="Full Name"
-            register={register("name")}
-            error={errors.name}
-            autoComplete="name"
-          />
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-          <Input
-            id="email"
-            type="email"
-            label="Email Address"
-            register={register("email")}
-            error={errors.email}
-            autoComplete="email"
-          />
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setApiError(null);
+        setIsSubmitting(true);
 
-          <Input
-            id="password"
-            type="password"
-            label="Password"
-            register={register("password")}
-            error={errors.password}
-            autoComplete="new-password"
-          />
+        console.log('Form data being sent:', formData);
 
-          <Input
-            id="confirmPassword"
-            type="password"
-            label="Confirm Password"
-            register={register("confirmPassword")}
-            error={errors.confirmPassword}
-            autoComplete="new-password"
-          />
+        // Basic validation
+        if (!formData.first_name || formData.first_name.trim().length < 2) {
+            setApiError("First name must be at least 2 characters");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.last_name || formData.last_name.trim().length < 2) {
+            setApiError("Last name must be at least 2 characters");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.email || !formData.email.includes('@')) {
+            setApiError("Please enter a valid email address");
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.password || formData.password.length < 8) {
+            setApiError("Password must be at least 8 characters");
+            setIsSubmitting(false);
+            return;
+        }
 
-          <div>
-            <Button type="submit" className="w-full" isLoading={isSubmitting}>
-              Create Account
-            </Button>
-          </div>
-        </form>
-
-        <p className="text-sm text-center text-gray-600">
-          Already have an account?{' '}
-          <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign in
-          </a>
-        </p>
+        try {
+            const response = await registerUser(formData);
+            auth.login(response.token, response.user);
+            navigate("/dashboard");
+        } catch (error) {
+            console.error('Registration error:', error);
+            if (error instanceof Error) {
+                setApiError(error.message);
+            } else {
+                setApiError(`Registration failed: ${JSON.stringify(error)}`);
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+  
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold text-center text-gray-900">Create a new account</h2>
+            {apiError && <div className="p-3 text-sm text-red-700 bg-red-100 border border-red-400 rounded-md">{apiError}</div>}
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">First Name</label>
+                    <input
+                        id="first_name"
+                        name="first_name"
+                        type="text"
+                        value={formData.first_name}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        autoComplete="given-name"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <input
+                        id="last_name"
+                        name="last_name"
+                        type="text"
+                        value={formData.last_name}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        autoComplete="family-name"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        autoComplete="email"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        autoComplete="new-password"
+                    />
+                </div>
+                <div>
+                    <Button type="submit" className="w-full" isLoading={isSubmitting}>
+                        Create Account
+                    </Button>
+                </div>
+            </form>
+            <p className="text-sm text-center text-gray-600">Already have an account?{' '}
+                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">Sign in</Link>
+            </p>
+        </div>
       </div>
-    </div>
-  );
+    );
 }

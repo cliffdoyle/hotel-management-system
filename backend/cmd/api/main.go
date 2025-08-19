@@ -22,6 +22,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// @title           Hotel Management System API
+// @version         1.0
+// @description     This is the API for a MEWS-like hotel management system.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description "Type 'Bearer' followed by a space and a JWT token."
+
 // config struct holds all configuration for the application.
 type config struct {
 	port string
@@ -53,7 +73,8 @@ type application struct {
 	services    Services
 	redis       *redis.Client
 	db          *pgxpool.Pool
-	metrics_reg *prometheus.Registry // <-- ADD A CUSTOM REGISTRY
+	metrics appMetrics // <-- ADD A CUSTOM REGISTRY
+	metrics_reg  *prometheus.Registry
 	// We will add models, services, repositories here later.
 }
 
@@ -102,6 +123,8 @@ func main() {
 	// --- Initialize Prometheus Registry ---
 	metrics_reg := prometheus.NewRegistry()
 
+	appMetrics := newMetrics(metrics_reg)
+
 	// --- Initialize repositories ---
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
@@ -122,6 +145,7 @@ func main() {
 		},
 		redis: redisClient,
 		db:    db,
+		metrics: appMetrics,
 		metrics_reg: metrics_reg,
 	}
 

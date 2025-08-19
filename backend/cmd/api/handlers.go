@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cliffdoyle/internal/tokens"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,4 +108,9 @@ func (app *application) refreshTokenHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+// metricsHandler creates a handler that serves metrics from our CUSTOM registry.
+func (app *application) metricsHandler() http.Handler {
+	return promhttp.HandlerFor(app.metrics_reg, promhttp.HandlerOpts{})
 }
