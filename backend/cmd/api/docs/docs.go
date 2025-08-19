@@ -44,8 +44,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is the API for a MEWS-like hotel management system.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
+	// LeftDelim:        "{{",
+	// RightDelim:       "}}",
 }
 
 func init() {
