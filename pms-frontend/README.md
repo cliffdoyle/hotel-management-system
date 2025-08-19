@@ -1,69 +1,121 @@
-# React + TypeScript + Vite
+# Hotel Management System - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React frontend for the Hotel Management System built with TypeScript, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## 🚀 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type safety and better developer experience
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router v6** - Client-side routing
+- **React Hook Form** - Form handling with validation
+- **Zod** - Schema validation
+- **Axios** - HTTP client for API calls
 
-## Expanding the ESLint configuration
+## 📁 Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── api/                 # API service layer
+│   ├── client.ts       # Axios configuration
+│   └── authService.ts  # Authentication API calls
+├── components/         # Reusable UI components
+│   └── ui/            # Basic UI components
+├── context/           # React Context providers
+├── hooks/             # Custom React hooks
+├── pages/             # Page components
+├── router/            # Route protection components
+├── services/          # Service layer exports
+├── types/             # TypeScript type definitions
+└── main.tsx          # Application entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Update the `.env` file with your API endpoint:
+   ```env
+   VITE_API_BASE_URL=http://localhost:8080/api/v1
+   VITE_NODE_ENV=development
+   ```
+
+3. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+## 🔐 Authentication
+
+The app includes a complete authentication system:
+
+- **Login Page** - User authentication with form validation
+- **Register Page** - User registration with comprehensive validation
+- **Forgot Password** - Password reset functionality
+- **Change Password** - Secure password change for authenticated users
+- **Protected Routes** - Route protection based on authentication status
+- **Token Management** - Automatic token handling with localStorage
+
+## 🎯 Features Implemented
+
+### ✅ Issue 33: Setup React Project Structure & Dependencies
+- [x] React project with Vite
+- [x] TypeScript configuration
+- [x] Tailwind CSS setup
+- [x] React Router installation
+- [x] Axios for API communication
+- [x] Folder structure (components, pages, hooks, services, types)
+- [x] Environment variables configuration
+- [x] ESLint and Prettier setup
+
+### ✅ Issue 34: Authentication UI Components
+- [x] Login component with form validation
+- [x] Register component with comprehensive form fields
+- [x] Password Change component
+- [x] Forgot Password component
+- [x] Form validation with proper error messages
+- [x] Loading states and success/error feedback
+- [x] Responsive design for mobile and desktop
+- [x] Accessibility features (ARIA labels, keyboard navigation)
+
+## 🚀 Next Steps
+
+The frontend is ready for:
+- Issue 35: Authentication Service & State Management (partially complete)
+- Issue 36: Dashboard Layout & Navigation
+- Issue 37: User Profile Management UI
+- Additional hotel management features
+
+## 🤝 Contributing
+
+1. Follow the established folder structure
+2. Use TypeScript for all new components
+3. Implement proper error handling
+4. Add accessibility features
+5. Write responsive designs
+6. Follow the existing code style
+
+## 📄 License
+
+This project is part of the Hotel Management System.

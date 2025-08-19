@@ -10,6 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
+// registerUserHandler godoc
+// @Summary      Register a new user
+// @Description  Creates a new user account for a specific hotel.
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        user body service.UserRegisterDTO true "User registration details"
+// @Success      201  {object}  envelope{user=models.User}
+// @Failure      400  {object}  envelope{error=string}
+// @Failure      422  {object}  envelope{error=map[string]string}
+// @Failure      500  {object}  envelope{error=string}
+// @Router       /users/register [post]
+
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input service.UserRegisterDTO
 	if err := app.readJSON(w, r, &input); err != nil {
@@ -38,6 +51,20 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+// loginHandler godoc
+// @Summary      Authenticate a user
+// @Description  Authenticates a user with email and password, returning JWT tokens.
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        credentials body service.UserLoginDTO true "User login credentials"
+// @Success      200  {object}  envelope{tokens=service.LoginResponse}
+// @Failure      400  {object}  envelope{error=string}
+// @Failure      401  {object}  envelope{error=string}
+// @Failure      422  {object}  envelope{error=map[string]string}
+// @Failure      500  {object}  envelope{error=string}
+// @Router       /users/login [post]
 
 func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	var input service.UserLoginDTO

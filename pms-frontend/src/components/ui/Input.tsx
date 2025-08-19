@@ -22,15 +22,26 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </label>
         <div className="mt-1">
           <input
+            {...props}
+            {...register} // Spread the register props AFTER props to avoid override
             id={id}
             type={type}
             className={`block w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm transition-colors duration-200 ${errorClass}`}
-            {...register} // Spread the register props
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={error ? `${id}-error` : undefined}
             ref={ref}     // Forward the ref
-            {...props}
           />
         </div>
-        {error && <p className="mt-2 text-sm text-red-600">{error.message}</p>}
+        {error && (
+          <p
+            id={`${id}-error`}
+            className="mt-2 text-sm text-red-600"
+            role="alert"
+            aria-live="polite"
+          >
+            {error.message}
+          </p>
+        )}
       </div>
     );
   }

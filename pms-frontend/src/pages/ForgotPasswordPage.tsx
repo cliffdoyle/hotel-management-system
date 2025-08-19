@@ -9,7 +9,9 @@ import { Button } from "../components/ui/Button";
 
 // 1. Define the validation schema for a single email field
 const forgotPasswordSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
+  email: z.string()
+    .min(1, "Email is required")
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email address"),
 });
 
 // 2. Infer the TypeScript type
@@ -23,6 +25,10 @@ export function ForgotPasswordPage() {
     formState: { errors, isSubmitting, isSubmitSuccessful }, // Add isSubmitSuccessful
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onSubmit',
+    defaultValues: {
+      email: ''
+    }
   });
 
   // 4. Define the submit handler
