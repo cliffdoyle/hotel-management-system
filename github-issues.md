@@ -261,16 +261,14 @@ Setup GitHub Actions, Docker configuration, and Fly.io deployment pipeline.
 **Milestone:** Phase 2 - Reservations & Basic Operations
 
 #### 📝 Description
-Create room models, room types, availability tracking, and room status management.
+Create models and APIs for managing rooms, room types, and their real-time status, with a focus on visual representation for front desk staff.
 
 #### 🎯 Acceptance Criteria
-- [ ] Create Room model with proper fields
-- [ ] Implement RoomType model for categorization
-- [ ] Add room availability tracking
-- [ ] Create room status management (available, occupied, maintenance, etc.)
-- [ ] Implement room search and filtering
-- [ ] Add room amenities management
-- [ ] Create room assignment logic
+- [ ] Create Room and RoomType models.
+- [ ] Implement CRUD endpoints for rooms and types.
+- [ ] Create an API to query room availability for a date range, optimized for a visual timeline UI.
+- [ ] Create room status management (available, occupied, maintenance,clean, dirty, Inspected, out of service)
+- [ ] Create endpoints for staff to update a room's status (e.g., from a housekeeping mobile app).
 
 #### 🏗️ Technical Requirements
 - Follow clean architecture pattern
@@ -295,12 +293,12 @@ Create room models, room types, availability tracking, and room status managemen
 Guest profiles, contact information, preferences, and guest history tracking.
 
 #### 🎯 Acceptance Criteria
-- [ ] Create Guest model with comprehensive fields
-- [ ] Implement guest profile management
-- [ ] Add contact information handling
+- [ ] Create Guest model with comprehensive fields(e.g.,metadata jsonb column)
+- [ ] Implement CRUD endpoints for guest profiles.
+- [ ] The Guest model must support loyalty program features (e.g., membership number, tier, points).
 - [ ] Create guest preferences system
-- [ ] Implement guest history tracking
-- [ ] Add guest search functionality
+- [ ] Track guest history (past and future stays).
+- [ ] Implement an efficient search endpoint for finding guests by name or email.
 - [ ] Create guest communication logs
 
 #### 🏗️ Technical Requirements
@@ -385,16 +383,14 @@ Room rates, seasonal pricing, rate plans, and basic pricing calculations.
 **Milestone:** Phase 2 - Reservations & Basic Operations
 
 #### 📝 Description
-Digital check-in process, room assignment, key management, and checkout procedures.
+Create the backend logic to support a modern, contactless, guest-driven check-in and check-out process.
 
 #### 🎯 Acceptance Criteria
-- [ ] Create check-in workflow
-- [ ] Implement room assignment logic
-- [ ] Add key management system
-- [ ] Create checkout procedures
-- [ ] Implement early/late checkout handling
-- [ ] Add guest verification process
-- [ ] Create status update notifications
+- [ ] Implement workflow to move a reservation's status to Checked-In or Checked-Out.
+- [ ] Create an endpoint to generate a secure, single-use, pre-arrival link for guests to check in online.
+- [ ] Implement backend logic to handle data submitted from the online check-in form (e.g., ID scan metadata, digital signature).
+- [ ] Design API hooks for future integration with digital key systems.
+- [ ] Develop logic for automatic room assignment during the check-in process.
 
 #### 🏗️ Technical Requirements
 - Workflow state management
@@ -442,21 +438,20 @@ Standard room charges, tax calculation, invoice generation, and payment processi
 
 ---
 
-### Issue 15: Job Booking System
+### Issue 15: Task Management System (Housekeeping) (Renamed & Refined)
 **Labels:** `phase-2`, `backend`, `enhancement`
 **Milestone:** Phase 2 - Reservations & Basic Operations
 
 #### 📝 Description
-Staff task assignment, service scheduling, maintenance jobs, and resource allocation.
+Create a task assignment system, primarily for housekeeping staff, optimized for mobile use.
 
 #### 🎯 Acceptance Criteria
-- [ ] Create Job model for task management
-- [ ] Implement staff assignment system
-- [ ] Add service scheduling functionality
-- [ ] Create maintenance job tracking
-- [ ] Implement resource allocation
-- [ ] Add job status tracking
-- [ ] Create notification system
+- [ ] Create a Task model (replaces Job model) linked to rooms and users.
+- [ ] Task model should have types (e.g., CLEANING, MAINTENANCE, GUEST_REQUEST).
+- [ ] Implement endpoints for managers to create and assign tasks.
+- [ ] Implement endpoints for staff to view their assigned tasks and update their status (e.g., Pending, In Progress, Completed).
+
+- [ ] The system should automatically generate cleaning tasks upon guest check-out.
 
 #### 🏗️ Technical Requirements
 - Task workflow management
@@ -511,16 +506,13 @@ Occupancy reports, revenue reports, guest lists, and operational dashboards.
 **Milestone:** Phase 3 - Advanced Billing & F&B Management
 
 #### 📝 Description
-Dual billing support, split charges, krap-billing, and flexible charge structures.
+Implement meal plan management and the backend support for modern F&B ordering.
 
 #### 🎯 Acceptance Criteria
-- [ ] Implement dual billing system (guest can have two billings)
-- [ ] Create split charge functionality
-- [ ] Add krap-billing (custom billing rules)
-- [ ] Implement flexible charge structures
-- [ ] Add partial payment tracking
-- [ ] Create billing allocation controls
-- [ ] Implement multiple payment methods per stay
+- [ ] Implement meal plan management (BB, HB, FB) on reservations.
+- [ ] Create a mechanism to track guest dietary requirements.
+- [ ] Create a dedicated endpoint to add a charge from a Point-of-Sale (POS) or QR code ordering system directly to a guest's room bill.
+- [ ] Develop backend logic for F&B consumption reporting (e.g., number of breakfasts served, itemized restaurant sales).
 
 #### 🏗️ Technical Requirements
 - Complex billing logic handling
@@ -854,16 +846,16 @@ White-label capabilities, custom branding, configurable workflows, custom fields
 **Milestone:** Phase 4 - SaaS Features & Enterprise Capabilities
 
 #### 📝 Description
-Channel manager integration, accounting software, email/SMS, POS system integration.
+ Build the foundation for an "app store" for hotels by designing an extensible, API-first platform that allows for seamless third-party integrations.
 
 #### 🎯 Acceptance Criteria
-- [ ] Create channel manager integration framework
+- [ ] Design and implement an event-driven notification system using webhooks for key events (reservation.created, guest.checked_in, etc.).
 - [ ] Implement accounting software connections
 - [ ] Add email/SMS notification system
 - [ ] Create POS system integration
-- [ ] Implement webhook system
+- [ ]Create a system for managing third-party app credentials and webhook subscriptions.
 - [ ] Add API marketplace framework
-- [ ] Create integration monitoring
+- [ ] Design an OAuth 2.0 authentication flow for third-party applications to securely access hotel data on behalf of a user.
 
 #### 🏗️ Technical Requirements
 - Robust API integration framework
