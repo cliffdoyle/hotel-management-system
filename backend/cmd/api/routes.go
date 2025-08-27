@@ -19,12 +19,16 @@ func (app *application) routes() http.Handler {
 		app.serverErrorResponse(w, r, fmt.Errorf("panic recovered: %v", i))
 	}
 
-	// --- Public Routes ---
+	//Public Routes
 	router.HandlerFunc(http.MethodPost, "/v1/users/register", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/users/login", app.loginHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/refresh", app.refreshTokenHandler)
 	router.Handler(http.MethodGet, "/metrics", app.metricsHandler())
+
+		//Room Management Routes
+	router.HandlerFunc(http.MethodPost, "/v1/rooms", app.requirePermission("rooms:write", app.createRoomHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/rooms", app.requirePermission("rooms:read", app.listRoomsHandler))
 
 	// Create the swagger handler.
 	// We need to strip the /swagger prefix so the handler's internal routing works.
