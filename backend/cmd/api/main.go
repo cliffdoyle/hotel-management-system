@@ -60,9 +60,11 @@ type config struct {
 type Models struct {
 	Permissions repository.PermissionRepository
 	Users       repository.UserRepository
+	Rooms       repository.RoomRepository
 }
 type Services struct {
 	Users service.UserService
+	Rooms  service.RoomService
 }
 
 // application struct holds the application-wide dependencies.
