@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cliffdoyle/internal/models"
+	"github.com/cliffdoyle/internal/repository"
 	"github.com/cliffdoyle/internal/tokens"
 	"github.com/google/uuid"
 )
@@ -131,12 +132,24 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		//Fetching full user data from db now
+		user, err := app.models.Users.GetByID(r.Context(), session.UserID)
+		if err != nil {
+			switch {
+			case errors.Is(err, repository.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
 		// At this point, the session is valid. For now, we will create a basic User struct.
 		// Later, we will fetch the full user details from the database.
-		user := &models.User{
-			ID:    session.UserID,
-			Roles: session.Roles,
-		}
+		// user := &models.User{
+		// 	ID:    session.UserID,
+		// 	Roles: session.Roles,
+		// }
 
 		r = app.contextSetUser(r, user)
 		next.ServeHTTP(w, r)

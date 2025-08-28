@@ -60,9 +60,11 @@ type config struct {
 type Models struct {
 	Permissions repository.PermissionRepository
 	Users       repository.UserRepository
+	Rooms       repository.RoomRepository
 }
 type Services struct {
 	Users service.UserService
+	Rooms  service.RoomService
 }
 
 // application struct holds the application-wide dependencies.
@@ -128,9 +130,11 @@ func main() {
 	// --- Initialize repositories ---
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
+	roomRepo := repository.NewRoomRepository(db)
 
 	// --- Initialize services ---
 	userService := service.NewUserService(userRepo, redisClient)
+	roomService := service.NewRoomService(roomRepo) 
 
 	// Initialize application struct
 	app := &application{
@@ -138,10 +142,12 @@ func main() {
 		logger: logger,
 		services: Services{
 			Users: userService,
+			Rooms: roomService,
 		},
 		models: Models{
 			Users:       userRepo,
 			Permissions: permissionRepo,
+			Rooms:       roomRepo,
 		},
 		redis: redisClient,
 		db:    db,
