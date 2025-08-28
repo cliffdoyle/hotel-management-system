@@ -23,6 +23,7 @@ func (app *application) withRateLimit(next http.Handler) http.Handler {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
+		app.logger.Info("request-received","ip",ip)
 
 		key := fmt.Sprintf("rate_limit:%s", ip)
 		now := time.Now()

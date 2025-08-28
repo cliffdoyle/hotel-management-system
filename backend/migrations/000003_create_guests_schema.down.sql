@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS guest_communication_logs;
+DROP TABLE IF EXISTS guests;
+DROP EXTENSION IF EXISTS pg_trgm;
