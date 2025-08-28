@@ -8,8 +8,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 
+	validator "github.com/cliffdoyle/internal/validation"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 )
@@ -28,6 +31,29 @@ func (app *application) readIDParam(r *http.Request) (uuid.UUID, error) {
 	}
 
 	return id, nil
+}
+
+// readString returns a string value from the query string, or a default value.
+func (app *application) readString(qs url.Values, key string, defaultValue string) string {
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	return s
+}
+
+// readInt returns an integer value from the query string, or a default value.
+func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+	return i
 }
 
 // writeJSON is a helper for sending JSON responses.
