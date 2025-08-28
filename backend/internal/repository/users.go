@@ -21,6 +21,7 @@ var (
 type UserRepository interface {
 	Create(ctx context.Context, user *models.User, hotelID uuid.UUID) error
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	// Future methods: GetByID, Update, Delete
 }
 
@@ -68,6 +69,36 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	defer cancel()
 
 	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID, &user.HotelID, &user.Email, &user.PasswordHash,
+		&user.FirstName, &user.LastName, &user.IsActive, &user.CreatedAt,
+		&user.UpdatedAt, &user.Version, &user.Roles,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+// Add the implementation for GetByID
+func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	query := `
+        SELECT u.id, u.hotel_id, u.email, u.password_hash, u.first_name, u.last_name, u.is_active, u.created_at, u.updated_at, u.version,
+               COALESCE(ARRAY_AGG(ro.name) FILTER (WHERE ro.name IS NOT NULL), '{}') as roles
+        FROM users u
+        LEFT JOIN users_roles ur ON u.id = ur.user_id
+        LEFT JOIN roles ro ON ur.role_id = ro.id
+        WHERE u.id = $1
+        GROUP BY u.id`
+
+	var user models.User
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := r.db.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.HotelID, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.IsActive, &user.CreatedAt,
 		&user.UpdatedAt, &user.Version, &user.Roles,
