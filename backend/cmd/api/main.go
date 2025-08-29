@@ -61,12 +61,14 @@ type Models struct {
 	Permissions repository.PermissionRepository
 	Users       repository.UserRepository
 	Rooms       repository.RoomRepository
-	Guests     	repository.GuestRepository
+	Guests      repository.GuestRepository
+	Rates       repository.RateRepository
 }
 type Services struct {
-	Users service.UserService
+	Users  service.UserService
 	Rooms  service.RoomService
 	Guests service.GuestService
+	Rates  service.RateService
 }
 
 // application struct holds the application-wide dependencies.
@@ -77,8 +79,8 @@ type application struct {
 	services    Services
 	redis       *redis.Client
 	db          *pgxpool.Pool
-	metrics appMetrics // <-- ADD A CUSTOM REGISTRY
-	metrics_reg  *prometheus.Registry
+	metrics     appMetrics // <-- ADD A CUSTOM REGISTRY
+	metrics_reg *prometheus.Registry
 	// We will add models, services, repositories here later.
 }
 
@@ -134,30 +136,34 @@ func main() {
 	permissionRepo := repository.NewPermissionRepository(db)
 	roomRepo := repository.NewRoomRepository(db)
 	guestRepo := repository.NewGuestRepository(db)
+	rateRepo := repository.NewRateRepository(db)
 
 	// --- Initialize services ---
 	userService := service.NewUserService(userRepo, redisClient)
-	roomService := service.NewRoomService(roomRepo) 
+	roomService := service.NewRoomService(roomRepo)
 	guestService := service.NewGuestService(guestRepo)
+	rateService := service.NewRateService(rateRepo)
 
 	// Initialize application struct
 	app := &application{
 		config: cfg,
 		logger: logger,
 		services: Services{
-			Users: userService,
-			Rooms: roomService,
+			Users:  userService,
+			Rooms:  roomService,
 			Guests: guestService,
+			Rates:  rateService,
 		},
 		models: Models{
 			Users:       userRepo,
 			Permissions: permissionRepo,
 			Rooms:       roomRepo,
-			Guests: guestRepo,
+			Guests:      guestRepo,
+			Rates:       rateRepo,
 		},
-		redis: redisClient,
-		db:    db,
-		metrics: appMetrics,
+		redis:       redisClient,
+		db:          db,
+		metrics:     appMetrics,
 		metrics_reg: metrics_reg,
 	}
 
