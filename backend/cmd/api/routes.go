@@ -37,7 +37,10 @@ func (app *application) routes() http.Handler {
 
 	//Rate Management & Pricing Routes
 	router.HandlerFunc(http.MethodPost, "/v1/rates", app.requirePermission("rates:write", app.createRatesHandler))
-	router.HandlerFunc(http.MethodGet, "/v1/rates/quote", app.requirePermission("rates:read", app.getPriceQuoteHandler)) // Protected for now
+	router.HandlerFunc(http.MethodGet, "/v1/rates/quote", app.requirePermission("rates:read", app.getPriceQuoteHandler))
+
+	//Reservation Routes
+	router.HandlerFunc(http.MethodPost, "/v1/reservations", app.requirePermission("reservations:write", app.createReservationHandler))
 
 	// Create the swagger handler.
 	// We need to strip the /swagger prefix so the handler's internal routing works.
