@@ -26,14 +26,18 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/refresh", app.refreshTokenHandler)
 	router.Handler(http.MethodGet, "/metrics", app.metricsHandler())
 
-		//Room Management Routes
+	//Room Management Routes
 	router.HandlerFunc(http.MethodPost, "/v1/rooms", app.requirePermission("rooms:write", app.createRoomHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/rooms", app.requirePermission("rooms:read", app.listRoomsHandler))
 
-	// --- Guest Management Routes ---
+	//Guest Management Routes
 	router.HandlerFunc(http.MethodPost, "/v1/guests", app.requirePermission("guests:write", app.createGuestHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/guests/:id", app.requirePermission("guests:read", app.getGuestHandler))
 	router.HandlerFunc(http.MethodGet, "/v1/guests", app.requirePermission("guests:read", app.listGuestsHandler))
+
+	//Rate Management & Pricing Routes
+	router.HandlerFunc(http.MethodPost, "/v1/rates", app.requirePermission("rates:write", app.createRatesHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/rates/quote", app.requirePermission("rates:read", app.getPriceQuoteHandler)) // Protected for now
 
 	// Create the swagger handler.
 	// We need to strip the /swagger prefix so the handler's internal routing works.
