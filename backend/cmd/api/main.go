@@ -63,12 +63,14 @@ type Models struct {
 	Rooms       repository.RoomRepository
 	Guests      repository.GuestRepository
 	Rates       repository.RateRepository
+	Reservations repository.ReservationRepository
 }
 type Services struct {
 	Users  service.UserService
 	Rooms  service.RoomService
 	Guests service.GuestService
 	Rates  service.RateService
+	Reservations service.ReservationService
 }
 
 // application struct holds the application-wide dependencies.
@@ -126,23 +128,25 @@ func main() {
 	}
 	logger.Info("redis connection pool established")
 
-	// --- Initialize Prometheus Registry ---
+	//Initialize Prometheus Registry
 	metrics_reg := prometheus.NewRegistry()
 
 	appMetrics := newMetrics(metrics_reg)
 
-	// --- Initialize repositories ---
+	//Initialize repositories 
 	userRepo := repository.NewUserRepository(db)
 	permissionRepo := repository.NewPermissionRepository(db)
 	roomRepo := repository.NewRoomRepository(db)
 	guestRepo := repository.NewGuestRepository(db)
 	rateRepo := repository.NewRateRepository(db)
+	resRepo := repository.NewReservationRepository(db)
 
-	// --- Initialize services ---
+	//Initialize services
 	userService := service.NewUserService(userRepo, redisClient)
 	roomService := service.NewRoomService(roomRepo)
 	guestService := service.NewGuestService(guestRepo)
 	rateService := service.NewRateService(rateRepo)
+	resService := service.NewReservationService(resRepo, rateService, db)
 
 	// Initialize application struct
 	app := &application{
@@ -153,6 +157,7 @@ func main() {
 			Rooms:  roomService,
 			Guests: guestService,
 			Rates:  rateService,
+			Reservations: resService,
 		},
 		models: Models{
 			Users:       userRepo,
@@ -160,6 +165,7 @@ func main() {
 			Rooms:       roomRepo,
 			Guests:      guestRepo,
 			Rates:       rateRepo,
+			Reservations: resRepo,
 		},
 		redis:       redisClient,
 		db:          db,
