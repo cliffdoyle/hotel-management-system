@@ -41,6 +41,11 @@ func (app *application) routes() http.Handler {
 
 	//Reservation Routes
 	router.HandlerFunc(http.MethodPost, "/v1/reservations", app.requirePermission("reservations:write", app.createReservationHandler))
+	// router.HandlerFunc(http.MethodPost, "/v1/reservations", app.requirePermission("reservations:write", app.createReservationHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/reservations", app.requirePermission("reservations:read", app.listReservationsHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/reservations/:id", app.requirePermission("reservations:read", app.getReservationHandler))
+	router.HandlerFunc(http.MethodPut, "/v1/reservations/:id/status", app.requirePermission("reservations:write", app.updateReservationHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/reservations/:id/cancel", app.requirePermission("reservations:write", app.cancelReservationHandler))
 
 	// Create the swagger handler.
 	// We need to strip the /swagger prefix so the handler's internal routing works.
